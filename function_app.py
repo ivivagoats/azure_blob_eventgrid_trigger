@@ -459,6 +459,8 @@ def _reset_question_set_for_submission(
                 assignment=assignment,
                 session_year=session_year,
             )
+            #TODO: Consider whether we want to delete all questions for the set, add a button in the frontend ?
+            #IMPORTANT
             cur.execute(
                 'DELETE FROM "PersonalisedQuestions" WHERE "questionSetId" = %s',
                 (question_set_id,),
@@ -559,6 +561,27 @@ def _try_mark_question_set_completed(
             completed_count,
             expected_submission_count,
         )
+
+
+def _find_missing_student_ids(student_ids: list[str]) -> list[str]:
+    if not student_ids:
+        return []
+
+    with _get_postgres_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                'SELECT DISTINCT COALESCE("schoolId", "userId"::text) '
+                'FROM "Users" '
+                'WHERE "schoolId" = ANY(%s) OR "userId"::text = ANY(%s)',
+                (student_ids, student_ids),
+            )
+            found_ids = {
+                _normalize_meta(row[0])
+                for row in cur.fetchall()
+                if row and row[0]
+            }
+
+    return [student_id for student_id in student_ids if student_id not in found_ids]
 
 
 def _store_questions_postgres(
@@ -666,12 +689,11 @@ def _store_questions_postgres(
                 and "PersonalisedQuestions_studentId_fkey" in (constraint_name or "")
                 and include_student_id
             ):
-                logging.warning(
-                    "Postgres FK violation on studentId (%s). Retrying with NULL studentId.",
+                logging.error(
+                    "Postgres FK violation on studentId (%s). Aborting insert because the student must exist before enqueue.",
                     student_id,
                 )
-                include_student_id = False
-                continue
+                raise
             raise
 
 
@@ -743,6 +765,21 @@ def _enqueue_generation_jobs(unit_code: str, assignment: str, session_year: str)
         if student_id:
             student_ids.append(student_id)
 
+    missing_student_ids = _find_missing_student_ids(student_ids)
+    if missing_student_ids:
+        message = (
+            "Cannot generate questions because these student IDs do not exist in the database: "
+            + ", ".join(missing_student_ids) + ". Please ensure all students are uploaded before uploading assignments."
+        )
+
+        _append_question_set_error(
+            unit_code=unit_code,
+            assignment=assignment,
+            session_year=session_year,
+            message=message,
+        )
+        return
+
     expected_submission_count = len(student_ids)
     if expected_submission_count == 0:
         logging.warning(
@@ -766,9 +803,8 @@ def _enqueue_generation_jobs(unit_code: str, assignment: str, session_year: str)
     with ServiceBusClient.from_connection_string(connection_string) as client:
         with client.get_queue_sender(_QUESTION_QUEUE_NAME) as sender:
             for submission_index, student_id in enumerate(student_ids, start=1):
-                # Comment out to newly generate a question set
-                # if has_generated_questions(student_id, unit_code, assignment, session_year):
-                #     continue
+                if _has_postgres_questions(student_id, unit_code, assignment, session_year):
+                    continue
                 payload = {
                     "student_id": student_id,
                     "unit_code": unit_code,
