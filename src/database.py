@@ -58,25 +58,6 @@ def store_document(collection, metadata: dict, content: str, source_blob: str):
         "timestamp": now_ts
     }
 
-    delete_filter = {
-        "unit_code": unit_code,
-        "assignment": assignment,
-        "session_year": session_year,
-    }
-
-    try:
-        delete_result = collection.delete_many(delete_filter)
-        if delete_result.deleted_count:
-            logging.warning(
-                f"Cleared {delete_result.deleted_count} docs for "
-                f"{unit_code}_{assignment}_{session_year}"
-            )
-    except Exception as e:
-        logging.error(
-            f"Database delete error for {unit_code}_{assignment}_{session_year}: {e}"
-        )
-
-
     # 2. Determine a stable ID for idempotent upload/overwrite behavior.
     # Overwriting the same logical artifact updates the existing record.
     if student_id:

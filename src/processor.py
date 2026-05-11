@@ -92,6 +92,30 @@ def _process_zip_file(zip_bytes: bytes, blob_name: str, collection):
     if errors:
         raise ValueError("\n".join(errors))
 
+    delete_filter = {
+        "unit_code": batch_metadata.get("unit_code"),
+        "assignment": batch_metadata.get("assignment"),
+        "session_year": batch_metadata.get("session_year"),
+    }
+    try:
+        delete_result = collection.delete_many(delete_filter)
+        if delete_result.deleted_count:
+            logging.warning(
+                "Cleared %s docs for %s_%s_%s",
+                delete_result.deleted_count,
+                delete_filter["unit_code"],
+                delete_filter["assignment"],
+                delete_filter["session_year"],
+            )
+    except Exception as exc:
+        logging.error(
+            "Database delete error for %s_%s_%s: %s",
+            delete_filter["unit_code"],
+            delete_filter["assignment"],
+            delete_filter["session_year"],
+            exc,
+        )
+
     # Save Student Data
     for student_id, text_parts in student_buffers.items():
         if not text_parts:
