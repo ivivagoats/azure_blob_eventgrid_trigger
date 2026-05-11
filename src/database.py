@@ -67,7 +67,7 @@ def store_document(collection, metadata: dict, content: str, source_blob: str):
     try:
         delete_result = collection.delete_many(delete_filter)
         if delete_result.deleted_count:
-            logging.info(
+            logging.warning(
                 f"Cleared {delete_result.deleted_count} docs for "
                 f"{unit_code}_{assignment}_{session_year}"
             )
