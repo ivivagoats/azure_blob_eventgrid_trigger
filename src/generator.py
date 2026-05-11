@@ -8,7 +8,7 @@ from typing import Any, Dict, List, Optional, Tuple
 
 # Initialize Anthropic Claude
 client = AnthropicFoundry(
-    api_key=os.getenv("CLAUDE_API_KEY_HAIKU"),
+    api_key=os.getenv("CLAUDE_API_KEY"),
     base_url=os.getenv("CLAUDE_ENDPOINT"),
 )
 
@@ -129,7 +129,7 @@ def generate_questions_logic(student_id, unit_code, session, assignment=None, as
         )
 
     response = client.messages.create(
-        model="claude-haiku-4-5",
+        model="claude-sonnet-4-6",
         max_tokens=2048,
         system=system_prompt,
         messages=[
