@@ -319,6 +319,7 @@ def generate_feedback(questions: List[str], answers: List[str], expected_answers
         If the student answer is not relevant to the teacher's expected answer, call that out. 
         Use the teacher's expected answer as the benchmark for correctness, but also consider partial understanding and provide constructive feedback on how to improve.
         Use simple and clear language, as this feedback will be given to students to help them understand their performance and how to improve for future assessments.
+        Instead of "the student", use "you" to make the feedback more direct and engaging for the student.
         
         Output:\n\n
         ### FEEDBACK\n
