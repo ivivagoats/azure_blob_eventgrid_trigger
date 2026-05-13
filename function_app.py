@@ -912,12 +912,19 @@ def student_assignments_upload(myblob: func.InputStream):
             message=str(ve),
         )
         return
-
-    _enqueue_generation_jobs(
-        unit_code=metadata["unit_code"],
-        assignment=metadata["assignment"],
-        session_year=metadata["session_year"],
-    )
+    try:
+        _enqueue_generation_jobs(
+            unit_code=metadata["unit_code"],
+            assignment=metadata["assignment"],
+            session_year=metadata["session_year"],
+        )
+    except Exception as e:
+        _append_question_set_error(
+            unit_code=metadata.get("unit_code"),
+            assignment=metadata.get("assignment"),
+            session_year=metadata.get("session_year"),
+            message=f"Failed to enqueue generation jobs: {e}",
+        )
     
 # Upload assessment brief
 @app.function_name(name="BriefUpload")
