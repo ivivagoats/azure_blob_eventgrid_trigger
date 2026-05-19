@@ -904,12 +904,12 @@ def student_assignments_upload(myblob: func.InputStream):
     )
     try:
         _handle_blob_event(myblob, target_collection_name="iviva-student-assignments")
-    except ValueError as ve:
+    except Exception as e:
         _append_question_set_error(
             unit_code=metadata.get("unit_code"),
             assignment=metadata.get("assignment"),
             session_year=metadata.get("session_year"),
-            message=str(ve),
+            message=f"Failed to read student assignments: {e}. Please check logs for further details.",
         )
         return
     try:
@@ -923,7 +923,7 @@ def student_assignments_upload(myblob: func.InputStream):
             unit_code=metadata.get("unit_code"),
             assignment=metadata.get("assignment"),
             session_year=metadata.get("session_year"),
-            message=f"Failed to enqueue generation jobs: {e}",
+            message=f"Failed to enqueue generation jobs: {e}. Please check logs for further details.",
         )
     
 # Upload assessment brief
