@@ -23,8 +23,7 @@ from src.parsers import decode_file_content
 GUIDANCE_CONTAINER = "iviva-staff-assessment-brief"
 GUIDANCE_BLOB = "comp1010_assignment2_s22025.pdf"
 
-GRADING_SYSTEM_PROMPT = (
-    """
+GRADING_SYSTEM_PROMPT = """
         This is a integrity-based test. You are an examiner checking students 'oral' answers against the essay written by a student to determine if the student actually did the essay they submitted.
         
         GUIDELINES:
@@ -44,7 +43,7 @@ GRADING_SYSTEM_PROMPT = (
         and so on...
 
     """
-)
+
 
 _client = AnthropicFoundry(
     api_key=os.getenv("CLAUDE_API_KEY"),
