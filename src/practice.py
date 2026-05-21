@@ -40,8 +40,7 @@ GRADING_SYSTEM_PROMPT = """
         ### SUMMARY (1 sentence)\n
         - Q1: Feedback for question 1
         - Q2: Feedback for question 2
-        and so on...
-        
+        and so on... 
     """
 
 
